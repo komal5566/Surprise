@@ -1,0 +1,376 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Love Letter — For You</title>
+    <style>
+      :root {
+        --bg1: #fff7fb;
+        --bg2: #fff0f5;
+        --accent1: #ff8aa1;
+        --accent2: #ff6f91;
+        --muted: #6b6170;
+        --card: rgba(255, 255, 255, 0.98);
+        --shadow: 0 28px 60px rgba(17, 12, 34, 0.06);
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        min-height: 100vh;
+        font-family: "Poppins", system-ui, -apple-system, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial;
+        background: linear-gradient(180deg, var(--bg1), var(--bg2));
+        color: #3c2a36;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        padding: 40px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      /* card */
+      .letter-wrap {
+        width: 100%;
+        max-width: 920px;
+        background: var(--card);
+        border-radius: 18px;
+        box-shadow: var(--shadow);
+        padding: 32px;
+        position: relative;
+        overflow: hidden;
+        border: 1px solid rgba(255, 111, 145, 0.03);
+      }
+
+      /* soft decorative top banner (matching your flags) */
+      .flag-strip {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        top: -24px;
+        width: 760px;
+        height: 80px;
+        background: url("/mnt/data/411a1a22-b4a9-4a3d-bb52-48532e73eef8.png")
+          center/cover no-repeat;
+        opacity: 0.14;
+        filter: blur(2px);
+        pointer-events: none;
+      }
+
+      header.letter-head {
+        display: flex;
+        align-items: center;
+        gap: 18px;
+        margin-bottom: 18px;
+      }
+      .avatar {
+        width: 86px;
+        height: 86px;
+        border-radius: 18px;
+        background: linear-gradient(180deg, var(--accent1), var(--accent2));
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-weight: 700;
+        font-size: 28px;
+        box-shadow: 0 12px 30px rgba(255, 111, 145, 0.12);
+      }
+      .title {
+        font-family: "Lobster", cursive;
+        font-size: 34px;
+        color: #7b2d5a;
+        margin: 0;
+        line-height: 1;
+      }
+      .subtitle {
+        color: var(--muted);
+        font-size: 14px;
+        margin-top: 6px;
+      }
+
+      /* letter body */
+      .letter-body {
+        margin-top: 18px;
+        display: flex;
+        gap: 28px;
+        align-items: flex-start;
+      }
+      .message {
+        flex: 1;
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.7),
+          rgba(255, 255, 255, 0.86)
+        );
+        border-radius: 14px;
+        padding: 22px;
+        box-shadow: 0 8px 30px rgba(17, 12, 34, 0.04) inset;
+        line-height: 1.55;
+        font-size: 16px;
+        color: #3a2b35;
+        position: relative;
+      }
+      .message p {
+        margin: 0 0 14px 0;
+      }
+      .message .closing {
+        margin-top: 10px;
+        font-weight: 600;
+        color: #7b2d5a;
+      }
+
+      /* photo / card on right */
+      .side-card {
+        width: 260px;
+        flex-shrink: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+      }
+      .photo {
+        width: 100%;
+        border-radius: 14px;
+        overflow: hidden;
+        box-shadow: 0 18px 40px rgba(17, 12, 34, 0.06);
+        border: 6px solid rgba(255, 255, 255, 0.5);
+        background: linear-gradient(
+          180deg,
+          rgba(255, 255, 255, 0.4),
+          rgba(255, 255, 255, 0.25)
+        );
+      }
+      .photo img {
+        display: block;
+        width: 100%;
+        height: auto;
+        display: block;
+      }
+
+      /* buttons */
+      .controls {
+        display: flex;
+        gap: 12px;
+        margin-top: 16px;
+        align-items: center;
+        justify-content: flex-start;
+      }
+      .btn {
+        padding: 10px 18px;
+        border-radius: 999px;
+        border: none;
+        cursor: pointer;
+        font-weight: 700;
+        color: white;
+        background: linear-gradient(90deg, var(--accent1), var(--accent2));
+        box-shadow: 0 10px 28px rgba(255, 111, 145, 0.14);
+        transition: transform 0.18s ease, box-shadow 0.18s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 15px;
+      }
+      .btn.ghost {
+        background: white;
+        color: #7b2d5a;
+        border: 1px solid rgba(123, 45, 90, 0.06);
+        box-shadow: 0 6px 18px rgba(17, 12, 34, 0.04);
+      }
+      .btn:hover {
+        transform: translateY(-3px);
+      }
+      .btn:active {
+        transform: translateY(0);
+      }
+      .btn.back {
+        background: linear-gradient(90deg, #ff8aa1, #ff6f91);
+      }
+
+      .btn.music {
+        background: linear-gradient(90deg, #ff9ac2, #ff6fa3);
+      }
+      .btn.music:hover {
+        transform: translateY(-3px);
+      }
+
+      /* small hearts animation */
+      .hearts {
+        position: absolute;
+        right: -40px;
+        bottom: -20px;
+        pointer-events: none;
+        width: 220px;
+        height: 220px;
+        opacity: 0.9;
+        background-image: radial-gradient(
+            circle at 20% 20%,
+            rgba(255, 111, 145, 0.12) 0 8%,
+            transparent 9%
+          ),
+          radial-gradient(
+            circle at 80% 30%,
+            rgba(255, 175, 191, 0.08) 0 9%,
+            transparent 10%
+          );
+      }
+      @keyframes floatUp {
+        0% {
+          transform: translateY(18px) scale(0.9);
+          opacity: 0;
+        }
+        20% {
+          opacity: 1;
+        }
+        100% {
+          transform: translateY(-140px) scale(1.05);
+          opacity: 0;
+        }
+      }
+      .floating-heart {
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        background: #ff6f7a;
+        transform: rotate(-45deg);
+        border-radius: 4px 4px 0 0;
+        box-shadow: 0 6px 18px rgba(123, 45, 90, 0.12);
+        opacity: 0;
+      }
+      .floating-heart:before,
+      .floating-heart:after {
+        content: "";
+        position: absolute;
+        width: 18px;
+        height: 18px;
+        border-radius: 50%;
+        background: #ff6f7a;
+        top: -9px;
+        left: 0;
+      }
+      /* places and timings */
+      .h1 {
+        left: 30px;
+        bottom: 20px;
+        animation: floatUp 4200ms ease-in-out infinite;
+        animation-delay: 0ms;
+      }
+      .h2 {
+        left: 70px;
+        bottom: 30px;
+        animation: floatUp 3800ms ease-in-out infinite;
+        animation-delay: 300ms;
+      }
+      .h3 {
+        left: 120px;
+        bottom: 12px;
+        animation: floatUp 4700ms ease-in-out infinite;
+        animation-delay: 700ms;
+      }
+      .h4 {
+        left: 160px;
+        bottom: 40px;
+        animation: floatUp 4300ms ease-in-out infinite;
+        animation-delay: 1200ms;
+      }
+
+      /* responsive */
+      @media (max-width: 960px) {
+        .letter-body {
+          flex-direction: column-reverse;
+          gap: 18px;
+        }
+        .side-card {
+          width: 100%;
+        }
+        .svg-deco {
+          display: none;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main class="letter-wrap" role="main" aria-labelledby="letterTitle">
+      <div class="flag-strip" aria-hidden="true"></div>
+
+      <header class="letter-head" aria-hidden="false">
+        <div class="avatar" aria-hidden="true">💌</div>
+        <div>
+          <h1 id="letterTitle" class="title">A Letter for My Popcorn</h1>
+          <div class="subtitle">
+            Little words, big heart — read me when you need a smile ❤️
+          </div>
+        </div>
+      </header>
+
+      <section class="letter-body">
+        <article class="message" aria-label="Love letter content">
+          <p>My Love,</p>
+
+          <p>
+            Happy Birthday, baby. ❤️ Aaj ka din sirf tumhara hai, aur main
+            chahti hoon ki tumhe har pal yeh feel ho ki tum kitne special ho…
+            mere liye. Tumne meri zindagi mein woh khushiyaan bhar di hain jinka
+            main sirf sapna dekhti thi. Tumhare saath har din zyada bright,
+            zyada peaceful, aur zyada pyaara lagta hai.
+          </p>
+
+          <p>
+            Is naye saal mein main tumhare liye sirf best wish karti hoon, woh
+            success jo tum deserve karte ho, woh happiness jo tumhari zindagi ko
+            fulfill kare, aur woh love jo kabhi kam na ho. Thank you, baby, for
+            loving me the way you do and for choosing me, for standing by me, and
+            for making me feel like the luckiest girl alive. Main hamesha
+            grateful rahungi ki mujhe tum jaise insaan mila. Enjoy your special
+            day, meri bholu. Aaj ke din bas smile karte rehna, khush rehna, aur
+            mujhe apne paas rehne dena. I love you more than words can ever
+            explain. 🎉🎂
+          </p>
+
+          <p class="closing">
+            With all my heart, <br /><strong>Hamesha Teri Meenu 🌻.</strong>
+          </p>
+        </article>
+
+        <aside class="side-card" aria-label="Photo and actions">
+          <div class="photo" aria-hidden="false">
+            <!-- using uploaded image path as requested -->
+            <img src="./assets/img021.jpg" alt="Our photo" />
+          </div>
+
+          <div class="controls" role="toolbar" aria-label="Letter actions">
+            <button class="btn back" id="backBtn" title="Go back">
+              ⟵ Back
+            </button>
+
+            <button class="btn music" id="musicBtn" title="Play favorite song">
+              🎧 Fav Music
+            </button>
+          </div>
+        </aside>
+      </section>
+
+      <!-- subtle floating hearts -->
+      <div class="hearts" aria-hidden="true">
+        <span class="floating-heart h1"></span>
+        <span class="floating-heart h2"></span>
+        <span class="floating-heart h3"></span>
+        <span class="floating-heart h4"></span>
+      </div>
+    </main>
+
+    <script>
+      // Download the uploaded image file (provided path)
+      document.getElementById("backBtn").addEventListener("click", () => {
+        window.history.back();
+      });
+      // redirect to music page
+      document.getElementById("musicBtn").addEventListener("click", () => {
+        window.location.href = "./music.html";
+      });
+    </script>
+  </body>
+</html>

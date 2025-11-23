@@ -1,0 +1,218 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Flat Cake — Candles</title>
+  <link rel="stylesheet" href="./cake.css" />
+  <style>
+    /* Make-a-wish Popup (lightweight local styles to match theme) */
+    .wish-popup {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      background: rgba(17, 8, 22, 0.18);
+      backdrop-filter: blur(3px);
+      z-index: 99999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 260ms ease;
+    }
+    .wish-popup.show {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .wish-box {
+      background: linear-gradient(180deg,#fff7fb,#fff0f5);
+      padding: 22px 28px;
+      border-radius: 16px;
+      box-shadow: 0 20px 60px rgba(24,8,32,0.18);
+      text-align: center;
+      border: 3px solid rgba(255,111,145,0.08);
+      min-width: 260px;
+      max-width: 88%;
+      animation: popWish 320ms cubic-bezier(.2,.9,.2,1) forwards;
+    }
+    .wish-box h2 {
+      font-family: "Lobster", cursive;
+      color: #ff6f91;
+      margin: 0 0 6px;
+      font-size: 22px;
+    }
+    .wish-box p {
+      margin: 0 0 14px;
+      color: #6f2f3e;
+      font-size: 15px;
+      line-height: 1.3;
+    }
+    .wish-box .ok-btn {
+      appearance: none;
+      border: none;
+      background: linear-gradient(90deg,#ffb3c8,#ff8aa1);
+      color: #fff;
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 8px 22px rgba(255,111,145,0.14);
+    }
+    @keyframes popWish {
+      0% { transform: scale(0.7); opacity: 0; }
+      60% { transform: scale(1.06); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    /* small responsive tweak */
+    @media (max-width: 420px) {
+      .wish-box { padding: 18px 20px; }
+      .wish-box h2 { font-size: 20px; }
+      .wish-box p { font-size: 14px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="card" aria-labelledby="title">
+      <h1 id="title" class="title">Make a Wish</h1>
+
+      <div class="bg-deco" aria-hidden="true"></div>
+
+      <div class="controls-top">
+        <label for="candleCount">Candles</label>
+        <div class="candle-controls">
+          <button id="decCand">−</button>
+          <input id="candleCount" type="range" min="1" max="12" value="3" />
+          <button id="incCand">+</button>
+          <span id="candleLabel">3</span>
+        </div>
+      </div>
+
+      <div class="cake-wrap" id="cakeWrap" tabindex="0" role="region" aria-label="Cake with candles">
+        <svg viewBox="0 0 520 360" class="cake-svg" xmlns="http://www.w3.org/2000/svg" role="img" aria-hidden="false">
+          <!-- plate -->
+          <ellipse cx="260" cy="320" rx="180" ry="18" fill="#efe9f1"/>
+
+          <!-- bottom shadow under cake -->
+          <ellipse cx="260" cy="280" rx="160" ry="28" fill="rgba(235, 200, 220, 0.08)"/>
+
+          <!-- bottom layer -->
+          <g id="layer-bottom" transform="translate(60,140)">
+            <rect x="0" y="0" width="400" height="120" rx="20" fill="#ffdbe6"/>
+            <path class="drip" d="M0 22c36-18 72 8 120 8s36-26 88-14 88 28 132 12 60-18 60-18v92H0z" fill="#ffeef4"/>
+            <rect x="0" y="98" width="400" height="14" rx="7" fill="#ff9fb8"/>
+            <g fill="#ffffff" opacity="0.9">
+              <rect x="80" y="38" width="6" height="2" rx="1" transform="rotate(-18 80 38)"/>
+              <rect x="160" y="64" width="6" height="2" rx="1" transform="rotate(12 160 64)"/>
+              <rect x="240" y="48" width="6" height="2" rx="1" transform="rotate(-28 240 48)"/>
+              <rect x="320" y="56" width="6" height="2" rx="1" transform="rotate(14 320 56)"/>
+            </g>
+          </g>
+
+          <!-- middle tier (short) -->
+          <g id="layer-mid" transform="translate(120,100)">
+            <rect x="0" y="0" width="280" height="56" rx="12" fill="#ffe6ef"/>
+            <rect x="0" y="44" width="280" height="6" rx="3" fill="#ffb1c7"/>
+          </g>
+
+          <!-- top cushion -->
+          <g id="top-pill" transform="translate(160,64)">
+            <rect x="0" y="0" width="200" height="44" rx="12" fill="#ffdfea"/>
+            <rect x="18" y="24" width="164" height="6" rx="3" fill="#ff9fb8"/>
+          </g>
+
+          <!-- candles container (dynamic) -->
+          <g id="candles" transform="translate(0,0)"></g>
+
+          <!-- confetti / sparklers -->
+          <g id="confetti"></g>
+        </svg>
+      </div>
+
+      <div class="controls">
+        <button id="blowBtn">Blow out</button>
+        <button id="makeAWish">Make a wish ✨</button>
+        <button id="relightAll" class="secondary">Relight all</button>
+      </div>
+
+    </section>
+  </main>
+
+  <!-- Wish popup inserted directly in this file -->
+  <div id="wishPopup" class="wish-popup" role="dialog" aria-hidden="true" aria-modal="true" aria-labelledby="wishTitle">
+    <div class="wish-box" role="document">
+      <h2 id="wishTitle">🎀 Make a Wish</h2>
+      <p id="wishMsg">May all your wishes come true — may today be full of love and magic 💖</p>
+      <div style="display:flex;justify-content:center">
+        <button id="closeWish" class="ok-btn" aria-label="Close wish popup">Okay 💗</button>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="./cake.ts"></script>
+
+  <script>
+    // Small helper script to show the "Make a Wish" popup when the Make a wish button is clicked.
+    (function () {
+      const makeBtn = document.getElementById('makeAWish');
+      const popup = document.getElementById('wishPopup');
+      const closeBtn = document.getElementById('closeWish');
+      const wishMsg = document.getElementById('wishMsg');
+
+      if (!makeBtn || !popup || !closeBtn) return;
+
+      function openPopup(message, autoHideMs = 4000) {
+        if (message) wishMsg.textContent = message;
+        popup.classList.add('show');
+        popup.setAttribute('aria-hidden', 'false');
+
+        // Auto-hide after a while (if desired)
+        if (autoHideMs && autoHideMs > 0) {
+          clearTimeout(popup._autoHideTimer);
+          popup._autoHideTimer = setTimeout(closePopup, autoHideMs);
+        }
+      }
+
+      function closePopup() {
+        popup.classList.remove('show');
+        popup.setAttribute('aria-hidden', 'true');
+        if (popup._autoHideTimer) {
+          clearTimeout(popup._autoHideTimer);
+          popup._autoHideTimer = null;
+        }
+      }
+
+      // wire to click: we still let cake.ts spawn confetti etc; this just shows the wish
+      makeBtn.addEventListener('click', (ev) => {
+        // message can be customized or randomized
+        const messages = [
+          'May all your wishes come true, my love 💖',
+          'Wishing you every happiness today and always ✨',
+          'Make a wish — I will hold it in my heart for you 💗'
+        ];
+        const msg = messages[Math.floor(Math.random() * messages.length)];
+        openPopup(msg, 4500);
+      });
+
+      // close handlers
+      closeBtn.addEventListener('click', closePopup);
+      popup.addEventListener('click', (e) => {
+        // clicking backdrop closes
+        if (e.target === popup) closePopup();
+      });
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape' && popup.classList.contains('show')) closePopup();
+      });
+
+      // make popup accessible: focus management
+      makeBtn.addEventListener('click', () => {
+        // small timeout so that button click handlers in cake.ts run first
+        setTimeout(() => {
+          closeBtn.focus();
+        }, 100);
+      });
+    })();
+  </script>
+</body>
+</html>
