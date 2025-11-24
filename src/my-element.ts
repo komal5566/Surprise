@@ -312,6 +312,139 @@ class MyHero extends HTMLElement {
               <p class="subtitle poem"> If I had a flower for every time I thought of you,🌸 
               I could walk in my garden forever. 💖</p>
         `;
+// ------------------ add background music support ------------------
+// Put this immediately after the this.innerHTML = `...` block.
+
+const musicSrc = new URL("./assets/happy-birthday.mp3", import.meta.url).href;
+
+// create/attach audio element (hidden)
+const bgAudio = document.createElement("audio");
+bgAudio.src = musicSrc;
+bgAudio.preload = "auto";
+bgAudio.loop = true;
+bgAudio.volume = 0.45;         // sensible default volume (0.0 - 1.0)
+bgAudio.style.display = "none";
+bgAudio.setAttribute("aria-hidden", "true");
+this.appendChild(bgAudio);    // append to the custom element (keeps it scoped)
+
+// music control UI (play/pause + mute) — small button group in the hero
+const musicControls = document.createElement("div");
+musicControls.className = "music-controls";
+musicControls.innerHTML = `
+  <button class="music-btn play" aria-pressed="false" title="Play music">🔊</button>
+  <button class="music-btn mute" aria-pressed="false" title="Mute music">🔇</button>
+`;
+
+// place controls inside hero-inner (or wherever you'd like)
+const heroInner = this.querySelector(".hero-inner");
+if (heroInner) heroInner.appendChild(musicControls);
+
+// small style for the buttons (add into the <style> block instead if you prefer)
+const styleEl = document.createElement("style");
+styleEl.textContent = `
+  .music-controls { display:inline-flex; gap:8px; margin-left:12px; align-items:center; }
+  .music-btn {
+    appearance: none;
+    border: none;
+    background: rgba(255,255,255,0.06);
+    padding: 8px 10px;
+    border-radius: 10px;
+    font-size: 16px;
+    cursor: pointer;
+    box-shadow: 0 6px 14px rgba(0,0,0,0.06);
+  }
+  .music-btn:active { transform: translateY(1px) scale(0.99); }
+  .music-btn.play.active { background: linear-gradient(90deg,#ff6fa3,#ff9fcf); color: #fff; }
+  .music-btn.mute.active { opacity: 0.6; }
+`;
+this.appendChild(styleEl);
+
+// helper state utils
+const LS_KEY = "birthday_music_state";
+function loadState() {
+  try { return JSON.parse(localStorage.getItem(LS_KEY) || "{}"); } catch { return {}; }
+}
+function saveState(s: Record<string, any>) {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(s)); } catch {}
+}
+
+let state = loadState();                 // { playing: true|false, muted: true|false }
+if (typeof state.playing === "undefined") state.playing = false;
+if (typeof state.muted === "undefined") state.muted = false;
+
+// reflect initial muted state
+bgAudio.muted = !!state.muted;
+const playBtn = musicControls.querySelector(".music-btn.play") as HTMLButtonElement | null;
+const muteBtn = musicControls.querySelector(".music-btn.mute") as HTMLButtonElement | null;
+
+function updateButtons() {
+  if (!playBtn || !muteBtn) return;
+  playBtn.classList.toggle("active", !!state.playing);
+  playBtn.setAttribute("aria-pressed", state.playing ? "true" : "false");
+  playBtn.textContent = state.playing ? "⏸️" : "▶️";
+  muteBtn.classList.toggle("active", !!state.muted);
+  muteBtn.setAttribute("aria-pressed", state.muted ? "true" : "false");
+  muteBtn.textContent = state.muted ? "🔇" : "🔊";
+}
+updateButtons();
+
+// safe play helper (handles Promise rejection if autoplay is blocked)
+async function tryPlay() {
+  try {
+    await bgAudio.play();
+    state.playing = true;
+    saveState(state);
+    updateButtons();
+  } catch (err) {
+    // Play was blocked (no user gesture). Keep state.playing = false and do nothing.
+    state.playing = false;
+    saveState(state);
+    updateButtons();
+  }
+}
+
+function pauseAudio() {
+  try {
+    bgAudio.pause();
+  } catch {}
+  state.playing = false;
+  saveState(state);
+  updateButtons();
+}
+
+// wire up the control buttons
+if (playBtn) {
+  playBtn.addEventListener("click", () => {
+    if (state.playing) {
+      pauseAudio();
+    } else {
+      tryPlay();
+    }
+  });
+}
+if (muteBtn) {
+  muteBtn.addEventListener("click", () => {
+    state.muted = !state.muted;
+    bgAudio.muted = !!state.muted;
+    saveState(state);
+    updateButtons();
+  });
+}
+
+// Ensure CTA click attempts to start music (user gesture) and also triggers confetti/navigation
+const ctaEl = this.querySelector(".cta") as HTMLElement | null;
+if (ctaEl) {
+  ctaEl.addEventListener("click", () => {
+    // try to start audio when the user clicks the CTA (user gesture required on many mobile/desktop browsers)
+    if (!state.playing) {
+      tryPlay();
+    }
+  });
+}
+
+// Optionally, if you want the audio to auto-play muted and unmute on first gesture, you can do:
+// bgAudio.muted = true; bgAudio.play(); then unmute on user click - but that loses audible autoplay.
+// ----------------------------------------------------------------
 
     // attach click handler to launch confetti and animate the button
     const cta = this.querySelector(".cta") as HTMLElement | null;
