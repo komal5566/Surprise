@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "parcel src/index.html src/celebration.html src/letter.html src/music.html",
-    "build": "parcel build src/index.html src/celebration.html src/letter.html src/music.html",
+    "build": "parcel build src/index.html src/celebration.html src/letter.html src/music.html src/love.html",
      "deploy": "gh-pages -d dist"
   },
   "dependencies": {

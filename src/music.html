@@ -580,44 +580,64 @@
             Hum se mayoos hoga zamaana Par zamaane ki kisko padi hai
           </p>
         </div>
+        <div class="panel" aria-hidden="false">
+          <h3>Little surprise</h3>
+          <p style="margin: 0 0 10px; color: var(--muted); font-size: 13px">
+            A tiny game to show how much I adore you — click to play 💕
+          </p>
+          <button
+            id="loveBtn"
+            class="small-btn"
+            title="Play: How much I Love it"
+          >
+            How much I Love you ❤️
+          </button>
+        </div>
       </aside>
 
       <div class="deco-heart">❤</div>
     </main>
 
-   <script type="module">
-  // at top of your existing module script
-  const cover022 = new URL('./assets/img022.jpg', import.meta.url).href;
-  const cover024 = new URL('./assets/img024.jpg', import.meta.url).href;
-  const cover010 = new URL('./assets/img010.jpg', import.meta.url).href;
-  const bannerImg = new URL('./assets/banner.png', import.meta.url).href;
-  const audioMere = new URL('./assets/MereLiyeTumKaafiHo.mp3', import.meta.url).href;
-  const audioAashiq = new URL('./assets/AashiqTera.mp3', import.meta.url).href;
-  const audioLauv = new URL('./assets/ILikeMeBetter.mp3', import.meta.url).href;
+    <script type="module">
+      // at top of your existing module script
+      const cover022 = new URL("./assets/img022.jpg", import.meta.url).href;
+      const cover024 = new URL("./assets/img024.jpg", import.meta.url).href;
+      const cover010 = new URL("./assets/img010.jpg", import.meta.url).href;
+      const bannerImg = new URL("./assets/banner.png", import.meta.url).href;
+      const audioMere = new URL(
+        "./assets/MereLiyeTumKaafiHo.mp3",
+        import.meta.url
+      ).href;
+      const audioAashiq = new URL("./assets/AashiqTera.mp3", import.meta.url)
+        .href;
+      const audioLauv = new URL("./assets/ILikeMeBetter.mp3", import.meta.url)
+        .href;
 
-  // you can update the banner background via JS (optional)
-  document.querySelector('.banner-ghost').style.backgroundImage = `url(${bannerImg})`;
+      // you can update the banner background via JS (optional)
+      document.querySelector(
+        ".banner-ghost"
+      ).style.backgroundImage = `url(${bannerImg})`;
 
-  const tracks = [
-    {
-      title: "Mere Liye Tum Kafhi Ho",
-      artist: "Ayushman Khurana",
-      src: audioMere,
-      cover: cover022,
-    },
-    {
-      title: "Aashiq Tera",
-      artist: "Sohail Sen, Altamash Faridi",
-      src: audioAashiq,
-      cover: cover024,
-    },
-    {
-      title: "I Like Me Better",
-      artist: "Lauv",
-      src: audioLauv,
-      cover: cover010,
-    },
-  ];
+      const tracks = [
+        {
+          title: "Mere Liye Tum Kafhi Ho",
+          artist: "Ayushman Khurana",
+          src: audioMere,
+          cover: cover022,
+        },
+        {
+          title: "Aashiq Tera",
+          artist: "Sohail Sen, Altamash Faridi",
+          src: audioAashiq,
+          cover: cover024,
+        },
+        {
+          title: "I Like Me Better",
+          artist: "Lauv",
+          src: audioLauv,
+          cover: cover010,
+        },
+      ];
 
       /* Quotes etc (unchanged) */
       const quotes = [
@@ -829,8 +849,6 @@
     <div class="ribbon two"></div>
     <div class="ribbon three"></div>
     <script>
-     
-
       function burstSparkles() {
         for (let i = 0; i < 20; i++) {
           const sp = document.createElement("div");
@@ -841,6 +859,88 @@
           setTimeout(() => sp.remove(), 1500);
         }
       }
+
+      (function () {
+        function debug(...args) {
+          console.log("[love-nav]", ...args);
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+          const btn = document.getElementById("loveBtn");
+          if (!btn) {
+            debug(
+              'loveBtn not found — check that the button markup is present and id is "loveBtn"'
+            );
+            return;
+          }
+
+          // Ensure it's not a submit button in a form
+          try {
+            btn.type = "button";
+          } catch (e) {}
+
+          // Defensive click handler
+          btn.addEventListener(
+            "click",
+            async function handler(ev) {
+              try {
+                // stop others from preventing navigation
+                if (ev && ev.stopImmediatePropagation)
+                  ev.stopImmediatePropagation();
+
+                debug("click detected — verifying love.html exists (fetch)");
+
+                // Try to fetch the target first so we can show a useful error if missing
+                const res = await fetch("./love.html", {
+                  method: "GET",
+                  cache: "no-cache",
+                });
+                if (!res.ok) {
+                  const status = res.status;
+                  debug("fetch returned non-OK:", status);
+                  alert(
+                    "Navigation failed: love.html returned HTTP " +
+                      status +
+                      ".\nCheck that love.html is deployed at the site root."
+                  );
+                  return;
+                }
+
+                // Prefer assign so back button works as expected
+                debug("love.html exists — navigating now with assign()");
+                try {
+                  window.location.assign("./love.html");
+                  return;
+                } catch (e) {
+                  debug("assign failed", e);
+                }
+
+                // Next fallback
+                debug("assign failed — falling back to href/");
+                try {
+                  window.location.href = "./love.html";
+                  return;
+                } catch (e) {
+                  debug("href assign failed", e);
+                }
+
+                // Final fallback: open in new tab/window
+                debug("all normal navigation failed — opening new tab");
+                window.open("./love.html", "_blank");
+              } catch (err) {
+                console.error(
+                  "[love-nav] unexpected error when navigating to love.html",
+                  err
+                );
+                alert(
+                  "Unable to navigate to love.html — open the console for details."
+                );
+              }
+            },
+            { capture: true, passive: false }
+          );
+        });
+      })();
     </script>
   </body>
 </html>

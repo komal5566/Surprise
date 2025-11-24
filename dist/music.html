@@ -566,12 +566,21 @@ button:focus, input:focus {
             Hum se mayoos hoga zamaana Par zamaane ki kisko padi hai
           </p>
         </div>
+        <div class="panel" aria-hidden="false">
+          <h3>Little surprise</h3>
+          <p style="color: var(--muted); margin: 0 0 10px; font-size: 13px">
+            A tiny game to show how much I adore you — click to play 💕
+          </p>
+          <button id="loveBtn" class="small-btn" title="Play: How much I Love it">
+            How much I Love you ❤️
+          </button>
+        </div>
       </aside>
 
       <div class="deco-heart">❤</div>
     </main>
 
-   <script>// modules are defined as an array
+    <script>// modules are defined as an array
 // [ module function, map of requires ]
 //
 // map of requires is short require name -> numeric require
@@ -1296,7 +1305,7 @@ const audioMere = new URL(require("993932e2c1199beb")).href;
 const audioAashiq = new URL(require("95294599c4f68089")).href;
 const audioLauv = new URL(require("8f51c4e388f1c6af")).href;
 // you can update the banner background via JS (optional)
-document.querySelector('.banner-ghost').style.backgroundImage = `url(${bannerImg})`;
+document.querySelector(".banner-ghost").style.backgroundImage = `url(${bannerImg})`;
 const tracks = [
     {
         title: "Mere Liye Tum Kafhi Ho",
@@ -1505,6 +1514,66 @@ module.exports = module.bundle.resolve("ILikeMeBetter.df544f1e.mp3") + "?" + Dat
         setTimeout(()=>sp.remove(), 1500);
     }
 }
+(function() {
+    function debug(...args) {
+        console.log("[love-nav]", ...args);
+    }
+    document.addEventListener("DOMContentLoaded", ()=>{
+        const btn = document.getElementById("loveBtn");
+        if (!btn) {
+            debug('loveBtn not found \u2014 check that the button markup is present and id is "loveBtn"');
+            return;
+        }
+        // Ensure it's not a submit button in a form
+        try {
+            btn.type = "button";
+        } catch (e) {}
+        // Defensive click handler
+        btn.addEventListener("click", async function handler(ev) {
+            try {
+                // stop others from preventing navigation
+                if (ev && ev.stopImmediatePropagation) ev.stopImmediatePropagation();
+                debug("click detected \u2014 verifying love.html exists (fetch)");
+                // Try to fetch the target first so we can show a useful error if missing
+                const res = await fetch("./love.html", {
+                    method: "GET",
+                    cache: "no-cache"
+                });
+                if (!res.ok) {
+                    const status = res.status;
+                    debug("fetch returned non-OK:", status);
+                    alert("Navigation failed: love.html returned HTTP " + status + ".\nCheck that love.html is deployed at the site root.");
+                    return;
+                }
+                // Prefer assign so back button works as expected
+                debug("love.html exists \u2014 navigating now with assign()");
+                try {
+                    window.location.assign("./love.html");
+                    return;
+                } catch (e) {
+                    debug("assign failed", e);
+                }
+                // Next fallback
+                debug("assign failed \u2014 falling back to href/");
+                try {
+                    window.location.href = "./love.html";
+                    return;
+                } catch (e) {
+                    debug("href assign failed", e);
+                }
+                // Final fallback: open in new tab/window
+                debug("all normal navigation failed \u2014 opening new tab");
+                window.open("./love.html", "_blank");
+            } catch (err) {
+                console.error("[love-nav] unexpected error when navigating to love.html", err);
+                alert("Unable to navigate to love.html \u2014 open the console for details.");
+            }
+        }, {
+            capture: true,
+            passive: false
+        });
+    });
+})();
 
 </script>
   

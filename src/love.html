@@ -1,0 +1,369 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>how much I Love You — Catch the Hearts</title>
+<style>
+  :root{
+    --bg1:#fff5fa; --bg2:#ffd6e8; --accent1:#ff9fbd; --accent2:#ff7aa6;
+    --muted:#775f70; --card:rgba(255,245,250,0.92); --radius:14px;
+    --shadow-lg: 0 32px 70px rgba(180,120,150,0.12);
+    --shadow-sm: 0 10px 26px rgba(200,140,165,0.10);
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%;margin:0;font-family:Inter, Poppins, system-ui, -apple-system, "Segoe UI", Roboto, Arial; background: linear-gradient(180deg,var(--bg1),var(--bg2)); -webkit-font-smoothing:antialiased;color:#3a2b35}
+  .wrap{max-width:980px;margin:30px auto;padding:20px;border-radius:18px;background:linear-gradient(180deg,rgba(255,255,255,0.96),rgba(255,255,255,0.9));box-shadow:var(--shadow-lg);position:relative;overflow:hidden;border:1px solid rgba(255,127,170,0.06)}
+  header{display:flex;align-items:center;justify-content:space-between;gap:12px}
+  h1{font-family:"Lobster", cursive;margin:0;color:#7b2d5a;font-size:32px}
+  .sub{color:var(--muted);font-size:13px}
+  .top-row{display:flex;gap:12px;align-items:center;justify-content:space-between;margin-top:14px}
+  .stats{display:flex;gap:12px;align-items:center}
+  .stat{background:linear-gradient(180deg,#fff,#fff);padding:10px 14px;border-radius:12px;box-shadow:var(--shadow-sm);font-weight:700}
+  .controls{display:flex;gap:8px;align-items:center}
+  .small-btn{padding:10px 14px;border-radius:999px;border:none;background:#ffdfe7;color:#7b2d5a;font-weight:700;cursor:pointer;box-shadow:var(--shadow-sm)}
+  .small-btn:active{transform:translateY(1px)}
+  .play-area{position:relative;height:380px;border-radius:14px;margin-top:14px;background:linear-gradient(180deg,rgba(255,250,253,0.9),rgba(255,245,249,0.7));overflow:hidden;display:flex;align-items:center;justify-content:center}
+  .play-area .hint{position:absolute;top:12px;left:14px;color:var(--muted);font-size:13px}
+  .heart{position:absolute;font-size:28px;cursor:pointer;user-select:none;transform-origin:center;transition:transform 160ms ease, opacity 220ms ease}
+  .score-pop{position:absolute;font-weight:800;color:#7b2d5a;font-size:16px;pointer-events:none;transform:translateY(-8px);opacity:0;transition:all 420ms}
+  .confetti {position:absolute;inset:0;pointer-events:none;overflow:visible}
+  .result{margin-top:14px;padding:12px;border-radius:12px;background:linear-gradient(180deg,#fff,#fff);box-shadow:var(--shadow-sm);text-align:center}
+  .result .big{font-size:20px;font-weight:900;color:#7b2d5a}
+  .footer{display:flex;justify-content:space-between;align-items:center;margin-top:14px;color:var(--muted);font-size:13px}
+
+  /* difficulty active look */
+  .difficulty .small-btn { opacity: 0.78; }
+  .difficulty .small-btn.active { opacity: 1; transform: translateY(-2px); background: linear-gradient(90deg,var(--accent1),var(--accent2)); color: #fff; }
+
+  @media (max-width:640px){
+    .play-area{height:300px}
+    h1{font-size:26px}
+  }
+</style>
+</head>
+<body>
+<main class="wrap" role="main" aria-label="How much I love it game">
+  <header>
+    <div>
+      <h1>how much I Love You</h1>
+      <div class="sub">Catch hearts to measure how much you're loved 💗</div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center">
+      <button class="small-btn" id="backBtn" title="Back">⟵ Back</button>
+      <button class="small-btn" id="restartBtn" title="Restart">Restart</button>
+    </div>
+  </header>
+
+  <div class="top-row" style="margin-top:12px">
+    <div class="stats" aria-live="polite">
+      <div class="stat">Score: <span id="score">0</span></div>
+      <div class="stat">Time: <span id="time">30</span>s</div>
+    </div>
+
+    <div class="controls difficulty" aria-hidden="false">
+      <button class="small-btn active" id="easyBtn">Easy</button>
+      <button class="small-btn" id="normalBtn">Normal</button>
+      <button class="small-btn" id="hardBtn">Hard</button>
+    </div>
+  </div>
+
+  <div class="play-area" id="playArea" tabindex="0" aria-label="Game play area">
+    <div class="hint">Tap / click the hearts — faster gives more points 💞</div>
+    <div class="confetti" id="confetti"></div>
+  </div>
+
+  <div class="result" id="result" style="display:none" aria-hidden="true">
+    <div class="big" id="resultScore">Score: 0</div>
+    <p id="resultText">A sweet message will appear here.</p>
+  </div>
+
+  <div class="footer">
+    <div>Made with 💖</div>
+    <div><small></small></div>
+  </div>
+</main>
+
+<script>
+/* ---------------------------
+  Catch the Hearts - JS
+   - spawns hearts randomly in playArea
+   - click/tap to collect
+   - timer and difficulty
+   - confetti and result
+   - optional background music: unmute on first gesture
+----------------------------*/
+
+(function(){
+  // config
+  const DEFAULT_TIME = 30; // seconds
+  const MUSIC_LS = 'birthday_music_allowed_v1';
+  const audioFile = './assets/ILikeMeBetter.df544f1e.mp3'; // change if needed
+
+  // DOM
+  const playArea = document.getElementById('playArea');
+  const scoreEl = document.getElementById('score');
+  const timeEl = document.getElementById('time');
+  const resultWrap = document.getElementById('result');
+  const resultScore = document.getElementById('resultScore');
+  const resultText = document.getElementById('resultText');
+  const confetti = document.getElementById('confetti');
+
+  const backBtn = document.getElementById('backBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const easyBtn = document.getElementById('easyBtn');
+  const normalBtn = document.getElementById('normalBtn');
+  const hardBtn = document.getElementById('hardBtn');
+
+  // state
+  let score = 0;
+  let timeLeft = DEFAULT_TIME;
+  let spawnTimer = null;
+  let clockTimer = null;
+  let difficulty = 'easy'; // easy | normal | hard
+
+  // audio (optional)
+  const bg = new Audio(audioFile);
+  bg.loop = true;
+  bg.volume = 0.45;
+  let musicAllowed = false;
+  try{ musicAllowed = !!JSON.parse(localStorage.getItem(MUSIC_LS) || 'false'); }catch(e){ musicAllowed = false; }
+
+  // helpers
+  function rand(min, max){ return Math.random()*(max-min)+min; }
+  function setDifficulty(d){
+    difficulty = d;
+    [easyBtn, normalBtn, hardBtn].forEach(b => b.classList.remove('active'));
+    if(d==='easy') easyBtn.classList.add('active');
+    if(d==='normal') normalBtn.classList.add('active');
+    if(d==='hard') hardBtn.classList.add('active');
+    restartGame();
+  }
+
+  function startGame(){
+    score = 0;
+    timeLeft = DEFAULT_TIME;
+    scoreEl.textContent = score;
+    timeEl.textContent = timeLeft;
+    resultWrap.style.display = 'none';
+    clearTimers();
+
+    // start spawn + clock
+    startSpawning();
+    clockTimer = setInterval(()=>{
+      timeLeft--;
+      timeEl.textContent = timeLeft;
+      if(timeLeft <= 0) endGame();
+    }, 1000);
+
+    // try play bg if allowed (user gesture may be required)
+    if(musicAllowed){
+      bg.play().catch(()=>{ /* blocked */ });
+    }
+  }
+
+  function clearTimers(){
+    if(spawnTimer) { clearInterval(spawnTimer); spawnTimer = null; }
+    if(clockTimer) { clearInterval(clockTimer); clockTimer = null; }
+    // remove remaining hearts
+    const hearts = playArea.querySelectorAll('.heart');
+    hearts.forEach(h => h.remove());
+  }
+
+  function endGame(){
+    clearTimers();
+    // message based on score
+    const msg = score >= 60 ? "You caught a galaxy of love! 🌟" :
+                score >= 40 ? "That's so much love! 💖" :
+                score >= 20 ? "A sweet collection of hearts 🥰" :
+                "Cute start — more hearts next time 💕";
+    resultScore.textContent = `Score: ${score}`;
+    resultText.textContent = msg;
+    resultWrap.style.display = 'block';
+    bigConfetti();
+    // stop bg audio optionally
+    try{ if(!bg.paused) bg.pause(); }catch(e){}
+  }
+
+  function startSpawning(){
+    let spawnRate = 900, life = 2800; // ms
+    if(difficulty==='easy'){ spawnRate = 1100; life = 3200; }
+    if(difficulty==='normal'){ spawnRate = 850; life = 2800; }
+    if(difficulty==='hard'){ spawnRate = 600; life = 2000; }
+    spawnTimer = setInterval(()=> spawnHeart(life), spawnRate);
+  }
+
+  function spawnHeart(life){
+    const h = document.createElement('div');
+    h.className = 'heart';
+    const emojis = ['💗','💖','💞','💕','💘'];
+    h.textContent = emojis[Math.floor(Math.random()*emojis.length)];
+
+    // compute position relative to playArea
+    const areaRect = playArea.getBoundingClientRect();
+    const size = (18 + Math.random()*36); // px (font size)
+    h.style.fontSize = size + 'px';
+    // ensure within bounds (10px padding)
+    const left = rand(10, areaRect.width - size - 10);
+    const top  = rand(30, areaRect.height - size - 20);
+    h.style.left = left + 'px';
+    h.style.top = top + 'px';
+    h.style.opacity = '0';
+    h.style.transform = 'scale(0.6)';
+
+    playArea.appendChild(h);
+
+    // entrance
+    requestAnimationFrame(()=> {
+      h.style.transition = 'opacity 220ms, transform 220ms';
+      h.style.opacity = '1';
+      h.style.transform = 'scale(1)';
+    });
+
+    // click/tap handler
+    const onClick = (ev) => {
+      ev.stopPropagation();
+      collectHeart(h);
+    };
+    h.addEventListener('click', onClick);
+
+    // remove after life
+    const to = setTimeout(()=>{
+      h.removeEventListener('click', onClick);
+      if(h.parentElement) h.remove();
+    }, life);
+
+    // tiny hover effect for desktop
+    h.addEventListener('mouseenter', ()=> h.style.transform = 'scale(1.12)');
+    h.addEventListener('mouseleave', ()=> h.style.transform = 'scale(1)');
+
+    // a small float animation
+    const floatAmp = rand(-6,6);
+    h.animate([{ transform: 'translateY(0)' }, { transform: `translateY(${floatAmp}px)` }, { transform: 'translateY(0)' }], { duration: 2000 + Math.random()*1600, iterations: Infinity, easing: 'ease-in-out' });
+  }
+
+  function collectHeart(el){
+    // scoring: quick clicks or difficulty affect points
+    const delta = difficulty==='easy' ? 1 : difficulty==='hard' ? 3 : 2;
+    score += delta;
+    scoreEl.textContent = score;
+
+    // show pop
+    const pop = document.createElement('div');
+    pop.className = 'score-pop';
+    pop.textContent = '+' + delta;
+    pop.style.left = el.style.left;
+    pop.style.top = el.style.top;
+    playArea.appendChild(pop);
+    requestAnimationFrame(()=> {
+      pop.style.opacity = '1';
+      pop.style.transform = 'translateY(-30px)';
+    });
+    setTimeout(()=> pop.remove(), 700);
+
+    // remove heart element
+    el.remove();
+
+    // small celebration every 10 points
+    if(score % 10 === 0) smallConfetti();
+  }
+
+  function smallConfetti(){
+    for(let i=0;i<14;i++){
+      const e = document.createElement('div');
+      e.textContent = ['✨','🎉','💖','🌸'][Math.floor(Math.random()*4)];
+      e.style.position='absolute';
+      e.style.left = (10 + Math.random()*80) + '%';
+      e.style.top  = (40 + Math.random()*40) + '%';
+      e.style.opacity = 1;
+      e.style.fontSize = (12 + Math.random()*22) + 'px';
+      confetti.appendChild(e);
+      const dur = 700 + Math.random()*800;
+      e.animate([{transform:'translateY(0) rotate(0) scale(1)',opacity:1},{transform:`translateY(-${120+Math.random()*220}px) rotate(${360+Math.random()*720}deg) scale(0.9)`,opacity:0}],{duration:dur, easing:'cubic-bezier(.2,.8,.2,1)'});
+      setTimeout(()=> e.remove(), dur + 60);
+    }
+  }
+
+  function bigConfetti(){
+    for(let i=0;i<36;i++){
+      const e = document.createElement('div');
+      e.textContent = ['💖','✨','🎉','🌸','💞'][Math.floor(Math.random()*5)];
+      e.style.position='absolute';
+      e.style.left = (10 + Math.random()*80) + '%';
+      e.style.top  = (70 + Math.random()*20) + '%';
+      e.style.fontSize = (14 + Math.random()*32) + 'px';
+      confetti.appendChild(e);
+      const dur = 1000 + Math.random()*1400;
+      e.animate([{transform:'translateY(0) rotate(0) scale(1)',opacity:1},{transform:`translateY(-${300+Math.random()*400}px) rotate(${360+Math.random()*1080}deg) scale(0.9)`,opacity:0}],{duration:dur, easing:'cubic-bezier(.2,.8,.2,1)'});
+      setTimeout(()=> e.remove(), dur + 120);
+    }
+  }
+
+  function restartGame(){
+    clearTimers();
+    startGame();
+  }
+
+  // event wiring
+  backBtn.addEventListener('click', ()=> window.history.back());
+  restartBtn.addEventListener('click', ()=> restartGame());
+  easyBtn.addEventListener('click', ()=> setDifficulty('easy'));
+  normalBtn.addEventListener('click', ()=> setDifficulty('normal'));
+  hardBtn.addEventListener('click', ()=> setDifficulty('hard'));
+
+  // first gesture unlock for audio: unmute/play if user previously allowed or on first click anywhere
+  function tryPlayBg(unmute=false){
+    if(unmute){
+      bg.muted = false;
+    }
+    bg.play().catch(()=>{ /* blocked */ });
+  }
+  function handleFirstGesture() {
+    // if user previously allowed, try play unmuted; otherwise keep muted autoplay
+    try{
+      const allowed = !!JSON.parse(localStorage.getItem(MUSIC_LS)||'false');
+      if(allowed){
+        tryPlayBg(true);
+      } else {
+        // do a muted play to keep audio element active
+        bg.muted = true;
+        bg.play().catch(()=>{});
+      }
+    }catch(e){}
+    // remove listeners
+    window.removeEventListener('click', handleFirstGesture, {capture:true});
+    window.removeEventListener('touchstart', handleFirstGesture, {capture:true});
+    window.removeEventListener('keydown', handleFirstGesture, {capture:true});
+  }
+  window.addEventListener('click', handleFirstGesture, {capture:true});
+  window.addEventListener('touchstart', handleFirstGesture, {capture:true});
+  window.addEventListener('keydown', handleFirstGesture, {capture:true});
+
+  // small UI: allow user to toggle music permission by clicking footer (convenience)
+  // (You can remove this if you don't want it)
+  document.addEventListener('keydown', (e)=>{
+    if(e.key === 'm' || e.key === 'M'){
+      musicAllowed = !musicAllowed;
+      try{ localStorage.setItem(MUSIC_LS, JSON.stringify(!!musicAllowed)); }catch(e){}
+      if(musicAllowed) tryPlayBg(true); else { try{ bg.pause(); }catch(e){} }
+    }
+  });
+
+  // initialize default difficulty & start
+  setDifficulty('easy');
+
+  // try muted autoplay right away (allowed on most browsers)
+  try { bg.muted = true; bg.play().catch(()=>{}); } catch(e){}
+
+  // auto-focus playArea for keyboard accessibility
+  playArea.addEventListener('keydown', (e)=>{
+    if(e.key === ' ' || e.key === 'Spacebar') { e.preventDefault(); /* noop */ }
+  });
+
+  // expose startGame for manual debugging (optional)
+  window.__catchHearts = { start: startGame, stop: endGame, setDifficulty };
+
+})();
+</script>
+</body>
+</html>
